@@ -82,7 +82,7 @@ def construct_intro(hero, intro, screen):
         screen.blit(text, (100, y))
         y += 32
         pygame.display.flip()
-        sleep(1.7)
+        sleep(2)
 
 
 def standard_event_constructor(hero, intro, answers, screen):
@@ -90,7 +90,7 @@ def standard_event_constructor(hero, intro, answers, screen):
     font = pygame.font.SysFont(None, 28)
     construct_intro(hero, intro, screen)
     buttons = buttons_clog.display_answers(answers)
-    pygame.display.flip()
+    sleep(1.5), pygame.display.flip()
     y = 100
 
     return font, buttons, y
@@ -110,6 +110,25 @@ def display_outro(hero, raw_text, y, screen, font):
 
 #*** --- *** --- *** --- *** --- ***
 
+@register(act=3)
+@register(act=2)
+@register(act=1)
+def no_event(hero, stage, screen):
+
+    if stage:
+        location = 'Einöden'
+
+    start = f'{hero.name} wandert durch die {location}'
+    a = 'Stunde um Stunde die vergeht'
+    b = 'Die Sonne am Himmel sich bewegt und dreht'
+    c = 'Die Füße müde und geschunden'
+    d = 'Hunger und Erschöpfung noch lange nicht überwunden'
+    e = f'Doch {hero.name} marschiert weiter trotz Qual,'
+    f = 'Denn er hat keine andere Wahl'
+
+    intro = [start, a, b, c, d, e, f]
+
+    standard_event_constructor(hero, intro, None, screen)
 
 @register(act=3)
 @register(act=2)
