@@ -1,8 +1,11 @@
-import pygame
 import random
 from time import sleep
+
+import pygame
+
+import buttons_clog
+import animations
 from buffs import *
-import buttons_clog 
 
 
 spells_act_1, spells_act_2, spells_act_3 = [], [], []
@@ -65,7 +68,7 @@ def learn_ability(hero, screen, stage):
     """pulls random spell, if hero has enough xp"""
     """hero gets the choice to learn it"""
     font = pygame.font.SysFont(None, 28)
-    screen.fill((50, 50, 50)), pygame.display.flip()
+    screen.fill((100, 100, 100)), pygame.display.flip()
 
     if random.choice(range(10)) < 7:
         canditates = random_abilities(hero, stage)
@@ -105,7 +108,7 @@ def learn_ability(hero, screen, stage):
 def forget_ability(hero, screen):
     """Hero can forget ability to make room for new one"""
     font = pygame.font.SysFont(None, 28)
-    screen.fill((50, 50, 50))
+    screen.fill((100, 100, 100))
     y = 100
     pygame.display.flip(), sleep(1)
     text = f"{hero.name} kann derzeit nur "
@@ -148,7 +151,7 @@ def forget_ability(hero, screen):
 def abilities_from_events(hero, ability, screen):
     """hero learns abilities gotten in events"""
     font = pygame.font.SysFont(None, 28)
-    screen.fill((50, 50, 50)), pygame.display.flip()
+    screen.fill((100, 100, 100)), pygame.display.flip()
     spell_learned = False
     y = 100
 
@@ -166,11 +169,9 @@ def abilities_from_events(hero, ability, screen):
     return spell_learned
 
 
-def enemy_block_dodge(hero, enemy, combat_log):
+def enemy_block_dodge(hero, enemy, combat_log, screen):
     """hero trys to inflict normal damage"""
-    magic_number = random.randint(0, 100)
-    magic_number += hero.accuracy
-    if magic_number < enemy.dodge:
+    if random.randint(0, 100) + hero.accuracy < enemy.dodge:
         text = f"{enemy.name} konnte ausweichen!!!"
         combat_log.add(text, True)
         MinusDodge(5, 5).buff(enemy)
@@ -189,6 +190,7 @@ def enemy_block_dodge(hero, enemy, combat_log):
         execution_x(hero, enemy, combat_log)#Checks instakill
         text = f"{enemy.name} erleidet {damage_taken} Schaden!"
         combat_log.add(text)
+        animations.enemy_hit(screen)
         return damage_taken
 
 
@@ -237,8 +239,7 @@ def execution_x(hero, enemy, combat_log):
 
 def hero_critical_hit(hero, combat_log):
     """Determines if attack was critical"""
-    magic_number = random.randint(0, 100)
-    if magic_number < hero.critical:
+    if random.randint(0, 100) < hero.critical:
         text = "KRITISCHER TREFFER!!"
         combat_log.add(text)
         crit_factor = 1.5
@@ -247,10 +248,9 @@ def hero_critical_hit(hero, combat_log):
     return crit_factor
 
 
-def enemy_mental_dodge(hero, ability, enemy, combat_log):
+def enemy_mental_dodge(hero, ability, enemy, combat_log, screen):
     """hero trys to inflict spell-dmg with an ability"""
-    magic_number = random.randint(0, 150)
-    if magic_number < enemy.dodge:
+    if random.randint(0, 150) < enemy.dodge:
         text = f"{enemy.name} konnte dem ZAUBER ausweichen!!!"
         combat_log.add(text, True)
         MinusDodge(5, 5).buff(enemy)
@@ -264,15 +264,14 @@ def enemy_mental_dodge(hero, ability, enemy, combat_log):
         #base spell-dmg increases pseudo critical chance
         extra_dmg = 0
         if hero.magic_power > 0:
-            magic_number = random.randint(ability, 500)
-            if magic_number >= 500 - ability - hero.magic_power:
+            if random.randint(ability, 500) >= 500 - ability:
                 extra_dmg = hero.magic_power
             else:
                 extra_dmg = 0
             if extra_dmg > 0:
                 text = 'PERFEKTE * ARKANE * KUNST'
                 combat_log.add(text)
-                text = f'** +{extra_dmg} **'
+                text = f'+{extra_dmg}'
                 combat_log.add(text)
         #hero.magical_power gets added to dmg if "critical"
             
@@ -283,6 +282,7 @@ def enemy_mental_dodge(hero, ability, enemy, combat_log):
         enemy.life -= damage_taken
         text = f"{enemy.name} erleidet {damage_taken} Zauberschaden!"
         combat_log.add(text)
+        animations.enemy_hit(screen)
         return damage_taken
 
 
@@ -294,7 +294,6 @@ class Ability:
         self.cost = cost
         self.xp = xp
         self.cool_down = cool_down
-        self.image = image
 
         self.image = pygame.image.load(image)
         self.image =pygame.transform.scale(self.image, (65, 65))
@@ -303,8 +302,7 @@ class Ability:
     def __repr__(self):
         return self.name
     
-    def __str__(self):
-        return self.name
+    __str__ = __repr__
 
     def _cost_and_cooldown(self, hero, mana_cost, cooldown=0, life_cost=0):
         hero.life -= life_cost
@@ -344,14 +342,14 @@ class Ability0(Ability):#STARTFÄHIGKEIT
         super().__init__("WAPPNEN", 10, 25, 0, 
                         starting_ability)
         
-    def use_ability(self, hero, enemy, combat_log):
+    def use_ability(self, hero, enemy, combat_log, screen):
         if hero.mana >= self.cost:
             text = f"{hero.name} wappnet sich."
             combat_log.add(text)
 
             hero.reduction += self.power * 3 #UNDO
             Empowered(self.power, 4).buff(hero)
-            enemy_mental_dodge(hero, self.power, enemy, combat_log)
+            enemy_mental_dodge(hero, self.power, enemy, combat_log, screen)
 
             self._cost_and_cooldown(hero, self.cost)
             return True
@@ -370,13 +368,13 @@ class Ability1(Ability):#SCHWERER HIEB
         super().__init__("SCHWERER HIEB", 19, 19, 250,
                         heavy_strike)
         
-    def use_ability(self, hero, enemy, combat_log):
+    def use_ability(self, hero, enemy, combat_log, screen):
         if hero.mana >= self.cost:
             text = f"{hero.name} schlägt mit aller Kraft zu!"
             combat_log.add(text)
 
             hero.damage += self.power
-            enemy_block_dodge(hero, enemy, combat_log)
+            enemy_block_dodge(hero, enemy, combat_log, screen)
             hero.damage -= self.power
 
             self._cost_and_cooldown(hero, self.cost)
@@ -393,16 +391,16 @@ class Ability2(Ability):# VERKRÜPPELNDER HIEB
         super().__init__("VERKRÜPPELNDER HIEB", 9, 23, 250,
                         crippling_strike)
         
-    def use_ability(self, hero, enemy, combat_log):
+    def use_ability(self, hero, enemy, combat_log, screen):
         if self.cool_down == 0:
             if hero.mana >= self.cost:
                 text = f"{hero.name} haut in die Schwachstelle!"
                 combat_log.add(text)
 
                 hero.damage += self.power#### normal dmg
-                damage_taken = enemy_block_dodge(hero, enemy, combat_log)
+                damage = enemy_block_dodge(hero, enemy, combat_log, screen)
                 hero.damage -= self.power####
-                if damage_taken > 0:
+                if damage > 0:
                     text = f"{enemy.name}'s Schaden ist reduziert."
                     combat_log.add(text)
                     CrippleH2E(5, 3).buff(enemy)
@@ -425,16 +423,16 @@ class Ability3(Ability):# PRÄZISER STICH
             super().__init__("PRÄZISER STICH", 9, 17, 250,
                             precise_hit)
             
-        def use_ability(self, hero, enemy, combat_log):
+        def use_ability(self, hero, enemy, combat_log, screen):
             if self.cool_down == 0:
                 if hero.mana >= self.cost:
                     text = f"{hero.name} setzt zum Stoß an!"
                     combat_log.add(text)
 
                     hero.damage += self.power####
-                    damage_taken = enemy_block_dodge(hero, enemy, combat_log)
+                    damage = enemy_block_dodge(hero, enemy, combat_log, screen)
                     hero.damage -= self.power####
-                    if damage_taken > 0:
+                    if damage > 0:
                         enemy.life -= self.power #Truedmg
                         text = f"+{self.power} Schaden."
                         combat_log.add(text)
@@ -457,13 +455,13 @@ class Ability4(Ability):# FEUERBALL
         super().__init__("FEUERBALL", 60, 65, 315, 
                         fire_ball)
         
-    def use_ability(self, hero, enemy, combat_log):
+    def use_ability(self, hero, enemy, combat_log, screen):
         if self.cool_down == 0:
             if hero.mana >= self.cost:
                 text = f"{hero.name} beschwört einen Feuerball!"
                 combat_log.add(text)
 
-                enemy_mental_dodge(hero, self.power, enemy, combat_log)
+                enemy_mental_dodge(hero,self.power,enemy,combat_log,screen)
 
                 self._cost_and_cooldown(hero, self.cost, cooldown=3)
                 return True
@@ -483,18 +481,18 @@ class Ability5(Ability): #MAGISCHER HIEB
         super().__init__("MAGISCHER HIEB", 17, 31, 345,
                         magical_strike)
         
-    def use_ability(self, hero, enemy, combat_log):
+    def use_ability(self, hero, enemy, combat_log, screen):
         if hero.mana >= self.cost:
             text = "MAGISCHER HIEB!"
             combat_log.add(text)
 
             hero.damage += self.power#normal dmg
-            enemy_block_dodge(hero, enemy, combat_log)
+            enemy_block_dodge(hero, enemy, combat_log, screen)
             hero.damage -= self.power####
 
             text = "Die Magie brennt nach."
             combat_log.add(text)
-            enemy_mental_dodge(hero, self.power, enemy, combat_log)
+            enemy_mental_dodge(hero,self.power,enemy,combat_log,screen)
 
             self._cost_and_cooldown(hero, self.cost)
             return True
@@ -510,14 +508,14 @@ class Ability6(Ability): #MORDHAU
         super().__init__("MORDHAU", 22, 5, 265,
                         mord_hau)
         
-    def use_ability(self, hero, enemy, combat_log):
+    def use_ability(self, hero, enemy, combat_log, screen):
         if self.cool_down == 0:
             if hero.mana > self.cost:
                 text = f"{hero.name} haut mit unmenschlicher Brutalität!"
                 combat_log.add(text)
 
                 hero.damage += self.power####
-                enemy_block_dodge(hero, enemy, combat_log)
+                enemy_block_dodge(hero, enemy, combat_log, screen)
                 hero.damage -= self.power####
 
                 self._cost_and_cooldown(hero, self.cost, cooldown=2, life_cost=self.cost)
@@ -538,7 +536,7 @@ class Ability7(Ability): #KLEINER GIFTPFEIL
         super().__init__("KLEINER GIFTPFEIL", 5, 25, 400,
                         poison_dart)
         
-    def use_ability(self, hero, enemy, combat_log):
+    def use_ability(self, hero, enemy, combat_log, screen):
         if self.cool_down == 0:
             if hero.mana >= self.cost:
                 text = f"{hero.name} wirft einen kleinen Pfeil."
@@ -547,9 +545,9 @@ class Ability7(Ability): #KLEINER GIFTPFEIL
                 self._cost_and_cooldown(hero, self.cost, cooldown=2)
 
                 hero.damage -= self.power # decrease atk
-                damage_taken = enemy_block_dodge(hero, enemy, combat_log)
+                damage = enemy_block_dodge(hero, enemy, combat_log, screen)
                 hero.damage += self.power
-                if damage_taken > 0:
+                if damage > 0:
                     Poison(10, 4).buff(enemy)
                     text = f"{enemy.name} wurde vergiftet."
                     combat_log.add(text)
@@ -637,7 +635,7 @@ class Ability10(Ability):#FROSTPFEIL
         super().__init__("FROSTPFEIL", 20, 24, 340,
                         frost_arrow)
         
-    def use_ability(self, hero, enemy, combat_log):
+    def use_ability(self, hero, enemy, combat_log, screen):
         if self.cool_down == 0:
             if hero.mana >= self.cost:
                 text = f"{hero.name} schleudert ein Eisprojektil!"
@@ -645,8 +643,8 @@ class Ability10(Ability):#FROSTPFEIL
 
                 self._cost_and_cooldown(hero, self.cost, cooldown=2)
 
-                damage_taken = enemy_mental_dodge(hero, self.power, enemy, combat_log)
-                if damage_taken > 0:
+                damage = enemy_mental_dodge(hero,self.power,enemy,combat_log,screen)
+                if damage > 0:
                     text = f"{hero.name}'s Zauber zeitigt seine Wirkung"
                     combat_log.add(text)
                     Frost(6, 3).buff(enemy)
@@ -686,15 +684,16 @@ class Ability11(Ability):#BLITZSCHLAG
         super().__init__('Blitzschlag', 30, 24, 750,
                          thunder)
         
-    def use_ability(self, hero, enemy, combat_log):
+    def use_ability(self, hero, enemy, combat_log, screen):
         if hero.mana >= self.cost:
             text = f"{hero.name} kanalisiert magische Kräfte."
             combat_log.add(text)
             text = f'Ein Blitz schiesst aus {hero.name} Fingern!'
             combat_log.add(text)
 
-            damage_taken = enemy_mental_dodge(hero, self.power, enemy, combat_log)
-            if damage_taken > 0:
+            sp = self.power + hero.magic_power
+            damage = enemy_mental_dodge(hero, sp, enemy, combat_log, screen)
+            if damage > 0:
                 text = f"{enemy.name} wurde geschockt."
                 combat_log.add(text)
                 Shock(12, 3).buff(enemy)
@@ -713,7 +712,7 @@ class Ability12(Ability):#DOPPELSCHLAG
         super().__init__('Doppelschlag', 3, 15, 760,
                         double_strike)
         
-    def use_ability(self, hero, enemy, combat_log):
+    def use_ability(self, hero, enemy, combat_log, screen):
         if hero.mana >= self.cost:
             text = f'Gekonnt schwingt {hero.name} seine Waffe.'
             combat_log.add(text)
@@ -721,9 +720,9 @@ class Ability12(Ability):#DOPPELSCHLAG
             self._cost_and_cooldown(hero, self.cost)
 
             hero.damage += self.power
-            damage_taken = enemy_block_dodge(hero, enemy, combat_log)
+            damage_taken = enemy_block_dodge(hero, enemy, combat_log, screen)
             if damage_taken > 0:
-                enemy_block_dodge(hero, enemy, combat_log)
+                enemy_block_dodge(hero, enemy, combat_log, screen)
             hero.damage -= self.power
             return True
         else:
@@ -785,8 +784,9 @@ class Ability14(Ability):#WINTERFAUST
 
                 self._cost_and_cooldown(hero, self.cost, cooldown=2)
 
-                damage_taken = enemy_mental_dodge(hero, self.power, enemy, combat_log)
-                if damage_taken > 0:
+                sp = self.power + hero.magic_power
+                damage = enemy_mental_dodge(hero, sp, enemy, combat_log)
+                if damage > 0:
                     text = f"{hero.name}'s Zauber zeitigt seine Wirkung"
                     combat_log.add(text)
                     Frost(8, 5).buff(enemy)
@@ -829,7 +829,7 @@ class Ability15(Ability):#ARKANE KUNST
                 hero.over_hp += round(self.power / 2)
                 return True
             else:
-                text = f'{hero.name} wurde nicht erhöht'
+                text = f'{hero.name}`s Magie wurde nicht erhöht'
                 combat_log.add(text)
                 return False
         else:
@@ -849,7 +849,7 @@ class Ability16(Ability):#ZERSCHMETTERN
         super().__init__('Zerschmettern', 5, 16, 650,
                         smite)
 
-    def use_ability(self, hero, enemy, combat_log):
+    def use_ability(self, hero, enemy, combat_log, screen):
         if hero.mana >= self.cost:
             text = f'Mit gewaltiger Wucht schwingt {hero.name}'
             combat_log.add(text)
@@ -859,7 +859,7 @@ class Ability16(Ability):#ZERSCHMETTERN
             self._cost_and_cooldown(hero, self.cost)
 
             hero.damage += self.power
-            damage_taken = enemy_block_dodge(hero, enemy, combat_log)
+            damage_taken = enemy_block_dodge(hero, enemy, combat_log, screen)
             hero.damage -= self.power
             if damage_taken > 0:
                 text = f'{enemy.name} verzieht das Gesicht vor Schmerz'
@@ -930,7 +930,7 @@ class Ability18(Ability):#ADERLASS
         super().__init__('Aderlass', 10, 25, 1050,
                          blood_letting)
         
-    def use_ability(self, hero, enemy, combat_log):
+    def use_ability(self, hero, enemy, combat_log, screen):
         if self.cool_down == 0:
             if hero.mana >= self.cost:
                 text = f'{hero.name} greift, mit Blutdurst'
@@ -943,14 +943,14 @@ class Ability18(Ability):#ADERLASS
                 hero.critical += round(self.power)#UNDO
 
                 hero.damage += self.power
-                damage_taken = enemy_block_dodge(hero, enemy, combat_log)
+                damage = enemy_block_dodge(hero, enemy, combat_log, screen)
                 hero.damage -= self.power
-                if damage_taken > 0:
+                if damage > 0:
                     text = f'Die Wunden von {enemy.name} wecken'
                     combat_log.add(text)
                     text = f'animalische Instinkte in {hero.name}'
                     combat_log.add(text)
-                    hero.life += round(damage_taken / 2)
+                    hero.life += round(damage / 2)
                     if hero.life > hero.max_life:
                         hero.life = hero.max_life
                     return True
@@ -974,15 +974,17 @@ class Ability18(Ability):#ADERLASS
 class Ability19(Ability):#MEISTERKOMBINATION
 
     def __init__(self):
-        super().__init__('Meisterkombination', 10, 20, 1200,
+        super().__init__('Meister-\nkombination', 10, 20, 1200,
                          master_combination)
         
-    def use_ability(self, hero, enemy, combat_log):
-        if self.cooldown == 0:
+    def use_ability(self, hero, enemy, combat_log, screen):
+        if self.cool_down == 0:
             if hero.mana >= self.cost:
                 text = f'{hero.name} wirkt einen Machtstoß!'
                 combat_log.add(text)
-                impact = enemy_mental_dodge(hero, self.power, enemy,combat_log)
+
+                sp = self.power + hero.magic_power
+                impact = enemy_mental_dodge(hero, sp, enemy, combat_log, screen)
 
                 self._cost_and_cooldown(hero, self.cost, cooldown=4)
 
@@ -990,7 +992,7 @@ class Ability19(Ability):#MEISTERKOMBINATION
                     text = f'Gekonnt schwingt {hero.name} seine Waffe'
                     combat_log.add(text)
                     hero.damage += self.power
-                    dmg = enemy_block_dodge(hero, enemy, combat_log)
+                    dmg = enemy_block_dodge(hero, enemy, combat_log, screen)
                     hero.damage -= self.power
 
                     if dmg > 0:
@@ -1020,14 +1022,14 @@ class Ability19(Ability):#MEISTERKOMBINATION
             return False
 
 register(act=2)
-class Ability20(Ability):
+class Ability20(Ability):#FEUERSIEGEL
 
     def __init__(self):
-        super().__init__('Feuersiegel', 10, 23, 1000,
+        super().__init__('Feuersiegel', 7, 23, 1000,
                          fire_seal)
         
-    def use_ability(self, hero, enemy, combat_log):
-        if self.cooldown == 0:
+    def use_ability(self, hero, enemy, combat_log, screen):
+        if self.cool_down == 0:
             if hero.mana >= self.cost:
                 text = f'{hero.name} zeichnet ein brennendes'
                 combat_log.add(text)
@@ -1036,7 +1038,8 @@ class Ability20(Ability):
 
                 self._cost_and_cooldown(hero, self.cost, cooldown=2)
 
-                dmg = enemy_mental_dodge(hero, self.power, enemy, combat_log)
+                sp = self.power + hero.magic_power
+                dmg = enemy_mental_dodge(hero, sp, enemy, combat_log, screen)
                 if dmg > 4:
                     text = 'Das Siegel brennt sich tief ein'
                     combat_log.add(text)
