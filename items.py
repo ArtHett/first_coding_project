@@ -1,10 +1,11 @@
 from random import choice
+
+import pygame
+
 from buffs import *
 from abilities import overhp_before_hp
 from abilities import enemy_block_dodge
 from abilities import enemy_mental_dodge
-
-import pygame
 
 
 consumable_pool, consumable_pool_2, consumable_pool_3 = [], [], []
@@ -30,11 +31,6 @@ def register(type='gear', act=1):
 
         return item
     
-    #print(f'consumable_act1: {consumable_pool}')
-    #print(f'consumable_act2: {consumable_pool_2}')
-    #print(f'gear_act1: {gear_pool}')
-    #print(f'gear_act2: {gear_pool_2}')
-
     return decorate
 
 
@@ -63,7 +59,7 @@ def random_gear(stage):
 
 
 class Consumable:
-    
+
     def __init__(self, name, power, charges, xp,
                   symbol, image):
         self.name = name
@@ -75,6 +71,7 @@ class Consumable:
         
         self.gear = False
         self.active = True
+        self.cool_down = False
         self.dungeon = False
         self.passive_effekt = False
         self.after_combat_effekt = False
@@ -114,10 +111,10 @@ class Gear:
         self.power = power
         self.xp = xp
         self.symbol = symbol
-        self.image = image
 
         self.gear = True
         self.active = False
+        self.cool_down = False
         self.passive_effekt = False
         self.magic_attack = False
         self.after_combat_effekt = False
@@ -127,8 +124,7 @@ class Gear:
         self.execution_15 = False
         self.execution_20 = False
     
-        self.image = pygame.image.load(
-            image)
+        self.image = pygame.image.load(image)
         self.image =pygame.transform.scale(self.image, (50, 50))
         self.rect = self.image.get_rect()
 
@@ -154,7 +150,7 @@ good_mana_potion = 'images/items/good_mana_potion.png'
 class Item1(Consumable):#HEILTRANK
 
     def __init__(self):
-        super().__init__("EINFACHER HEILTRANK",
+        super().__init__("EINFACHER \n HEILTRANK",
                         60, 1, 55,
                         '', simple_health_potion)
         self.dungeon = True
@@ -176,7 +172,7 @@ class Item1(Consumable):#HEILTRANK
 class Item2(Consumable):#ODEM-ESSENZ
 
     def __init__(self):
-        super().__init__("EINFACHE ODEM-ESSENZ",
+        super().__init__("EINFACHE \n ODEM-ESSENZ",
                         60, 1, 50,
                         '', simple_mana_potion)
         self.dungeon = True
@@ -198,7 +194,7 @@ class Item2(Consumable):#ODEM-ESSENZ
 class Item3(Consumable):#BRANDBOMBE
 
     def __init__(self):
-        super().__init__("KLEINE BRANDBOMBE",
+        super().__init__("KLEINE \n BRANDBOMBE",
                         20, 1, 65, '', simple_fire_bomb)
         
     def use_item(self, hero, enemy, combat_log):
@@ -230,7 +226,7 @@ class Item3(Consumable):#BRANDBOMBE
 class Item4(Consumable):#prakt. HEILTRANK
 
     def __init__(self):
-        super().__init__("PRAKTISCHER HEILTRANK",
+        super().__init__("PRAKTISCHER \n HEILTRANK",
                           60, 2, 110, "", moderate_health_potion)
         self.dungeon = True
         self.update_symbol()
@@ -275,7 +271,7 @@ class Item5(Consumable):#BERSERKER BLUT
 class Item6(Consumable):#verb. BRANDBOMBE
 
     def __init__(self):
-        super().__init__("VERBESSERTE BRANDBOMBE",
+        super().__init__("VERBESSERTE \n BRANDBOMBE",
                           21, 2, 110, '', moderate_fire_bomb)
         self.update_symbol()
 
@@ -312,7 +308,7 @@ class Item6(Consumable):#verb. BRANDBOMBE
 class Item7(Consumable):#GUTE ODEM-ESSENZ
 
     def __init__(self):
-        super().__init__("GUTE ODEM-ESSENZ",
+        super().__init__("GUTE \n ODEM-ESSENZ",
                         45, 1, 110,
                         '', good_mana_potion)
         self.dungeon = True
@@ -439,8 +435,8 @@ class Boots(Gear):
 class SimpleWarmogs(Gear):
 
     def __init__(self):
-        super().__init__("Rüstung der Lebenskraft",
-                          20, 138, '', simple_warmogs)
+        super().__init__("Rüstung der \n Lebenskraft",
+                          25, 138, '', simple_warmogs)
         
     def equip(self, hero):
         hero.inventory.append(self)
@@ -457,7 +453,7 @@ class SimpleWarmogs(Gear):
 class ManaMantle(Gear):
 
     def __init__(self):
-        super().__init__("Mantel der Intelligenz",
+        super().__init__("Mantel der \n Intelligenz",
                         25, 132, '', mana_mantle)
         
     def equip(self, hero):
@@ -479,7 +475,7 @@ class ManaMantle(Gear):
 class LifeStone(Gear):
 
     def __init__(self):
-        super().__init__("Stein des Lebens",
+        super().__init__("Stein des \n Lebens",
                          2, 200, '', life_stone)
         self.passive_effekt = True
 
@@ -498,7 +494,7 @@ class LifeStone(Gear):
 class KhansHat(Gear):
 
     def __init__(self):
-        super().__init__("Helm des Eroberers", 
+        super().__init__("Helm des \n Eroberers", 
                         6, 190, '', khans_hat)
         
     def equip(self, hero):
@@ -515,7 +511,7 @@ class KhansHat(Gear):
 class ElvenBoots(Gear):
 
     def __init__(self):
-        super().__init__("Elfen-Schuhe", 
+        super().__init__("Elfen-Stiefel", 
                         10, 185, '', elven_boots)
         
     def equip(self, hero):
@@ -586,7 +582,7 @@ class MoonStone(Gear):
 
     def __init__(self):
         super().__init__('Mondfragment',
-                         15, 170, '', moon_stone)
+                         19, 170, '', moon_stone)
         self.active = True
         self.after_combat_effekt = True
 
@@ -602,6 +598,7 @@ class MoonStone(Gear):
         text = f'{hero.name} ergreift den Stein und drückt ihn fest!'
         combat_log.add(text)
         self.active = False
+        self.cool_down = True
         hero.mental_reduction -= self.power
         hero.mana += self.power * 3
         if hero.mana > hero.max_mana:
@@ -613,13 +610,14 @@ class MoonStone(Gear):
         if not self.active:
             hero.mental_reduction += self.power
             self.active = True
+            self.cool_down = False
 
 @register()
 class MagicWand(Gear):
 
     def __init__(self):
-        super().__init__('Mysteriöser Schlüssel',
-                    16, 195, '', magic_key)
+        super().__init__('Mysteriöser \n Schlüssel',
+                    17, 195, '', magic_key)
         self.magic_attack = True
 
     def equip(self, hero):
@@ -671,7 +669,7 @@ class HealingSalve(Consumable):
 
     def __init__(self):
         super().__init__("Heilsalbe",
-                        33, 2, 200,
+                        30, 2, 200,
                         '', healing_salve)
         self.update_symbol()
 
@@ -685,7 +683,7 @@ class HealingSalve(Consumable):
         if hero.life >= hero.max_life:
             hero.life = hero.max_life
         if combat_log != None:
-            Regeneration(10, 8).buff(hero)
+            Regeneration(7, 8).buff(hero)
             text = "Du Salbe legt sich über die Haut"
             combat_log.add(text)
             text = "wie Honig über einen Apfel"
@@ -699,7 +697,7 @@ class HealingSalve(Consumable):
 class HandyManaPotion(Consumable):#reused and altered for act 2
     
     def __init__(self):
-        super().__init__("PRAKTISCHE ODEM-ESSENZ",
+        super().__init__("PRAKTISCHE \n ODEM-ESSENZ",
                         45, 2, 200,
                         '', good_mana_potion)#icon png from act 1
         self.dungeon = True
@@ -762,14 +760,15 @@ class AcidBomb(Consumable):
 class MetallicPotion(Consumable):
 
     def __init__(self):
-        super().__init__("Metall-Trank",
-                        8, 1, 320, "", metallic_potion)
+        super().__init__("Metal-Trank",
+                        10, 1, 320, "", metallic_potion)
 
     def use_item(self, hero, enemy, combat_log): 
         text = f'{hero.name} öffnet die Flasche und ein'
         combat_log.add(text)
         text = 'stark beißender Geruch kommt Ihm entgegen'
         combat_log.add(text)
+        hero.over_hp += self.power * 2
         IronMan(self.power, self.power).buff(hero)
         self.charges -= 1
         if self.charges == 0:
@@ -872,7 +871,7 @@ class MagiRobe(Gear):
 class MagicHasteRing(Gear):
 
     def __init__(self):
-        super().__init__('Ring der magischen Eile',
+        super().__init__('Ring der \n magischen Eile',
                          7, 400, '', magic_haste_ring)
         
     def equip(self, hero):
@@ -889,7 +888,7 @@ class MagicHasteRing(Gear):
 class CursedArtefact(Gear):
 
     def __init__(self):
-        super().__init__('VERFLUCHTES ARTEFAKT',
+        super().__init__('VERFLUCHTES \n ARTEFAKT',
                         12, 420, '', cursed_artefact)
         self.execution_10 = True
 
@@ -987,6 +986,7 @@ class WarBow(Gear):
             text = f'{hero.name} spannt den den Bogen so weit er kann'
             combat_log.add(text)
             self.active = False
+            self.cool_down = True
             text = f'Der Pfeil zischt in Richtung {enemy.name}'
             combat_log.add(text)
             hero.damage *= 2
@@ -999,6 +999,7 @@ class WarBow(Gear):
     def after_combat(self, hero):
         if not self.active:
             self.active = True
+            self.cool_down = False
 
 @register(act=2)
 class Shield(Gear):
@@ -1020,7 +1021,7 @@ class HighMageRod(Gear):
     """Changes physical auto-attacks
     to magical auto-attacks"""
     def __init__(self):
-        super().__init__('STAB DES ZAUBERERS',
+        super().__init__('STAB DES \n ZAUBERERS',
                     20, 570, '', mage_wand)
         self.magic_attack = True
 
@@ -1041,7 +1042,7 @@ class WardenPlate(Gear):
     def __init__(self):
         super().__init__('WÄCHTER-PANZER',
                         8, 550, '', warden_plate)
-        self.active = True
+        self.charged = True
         self.initial_life = 0
         
     def equip(self, hero):
@@ -1055,16 +1056,18 @@ class WardenPlate(Gear):
     def trigger_passive(self, hero, combat_log):
         if self.initial_life == 0:
             self.initial_life = hero.life
-        elif self.active and hero.life < self.initial_life * 2:
+        elif self.charged and hero.life * 2 < self.initial_life:
             text = f'{self.name} erwacht zum Leben'
             combat_log.add(text)
             text = f'und hüllt {hero.name} in einen Panzer'
-            hero.over_hp += hero.life
-            self.active = False
+            hero.over_hp += self.initial_life
+            self.charged = False
+            self.cool_down = True
 
     def after_combat(self, hero):
         self.initial_life = 0
-        self.active = True
+        self.charged = True
+        self.cool_down = False
 
 @register(act=2)
 class CeremonyDagger(Gear):
@@ -1086,11 +1089,11 @@ class CeremonyDagger(Gear):
         hero.damage -= self.power
         hero.inventory.remove(self)
 
-#IMage needed
+@register(act=2)
 class ChampionSword(Gear):
     #heavy boost for normal attacks with minor malus
     def __init__(self):
-        super().__init__('SCHWERT DES CHAMPION',
+        super().__init__('SCHWERT DES \n CHAMPION',
                         16, 600, '', champion_sword)
 
     def equip(self, hero):
