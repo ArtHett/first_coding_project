@@ -1,10 +1,11 @@
 from time import sleep
 from random import randint
 from functools import partial
+
+import buttons_clog
 from combat_interface import *
 from abilities import *
 from enemies import *
-import buttons_clog
 
 
 def start_fight(hero, stage, screen):
@@ -35,7 +36,7 @@ def main_fight(hero, enemy, screen, stage):
 
     while enemy.life > 0 and hero.life > 0 and action != 'escape':
 
-        screen.fill((150,100,0))
+        screen.fill((150, 100, 0))
         cooldown_and_passive_trigger(hero, combat_log)
         hero_interface(hero, screen)
         enemy_interface(enemy, screen)
@@ -51,7 +52,7 @@ def main_fight(hero, enemy, screen, stage):
         action_1 = attack_order[0]()
         if action_1 != None:
             action = action_1
-        screen.fill((150,100,0)), combat_log.draw()
+        screen.fill((150, 100, 0)), combat_log.draw()
         hero_interface(hero, screen), enemy.blitme(screen)
         enemy_interface(enemy, screen), pygame.display.flip()
         # *** FIRST MOVE ***
@@ -129,13 +130,13 @@ def who_first(hero, enemy, attack_order, key, action, combat_log, screen):
         attack_order.append(partial(hero_turn, hero, enemy, action, combat_log, screen))
         attack_order.append(partial(enemy_turn, hero, enemy, key, combat_log))
         text = f"{hero.name} ist schneller!"
-        combat_log.add(text), sleep(0.5)
+        combat_log.add(text)
 
     else:
         attack_order.append(partial(enemy_turn, hero, enemy, key, combat_log))
         attack_order.append(partial(hero_turn, hero, enemy, action, combat_log, screen))
         text = f"{enemy.name} ist schneller!"
-        combat_log.add(text, True), sleep(0.5)
+        combat_log.add(text, True)
 
     return attack_order
 
@@ -154,7 +155,10 @@ def enemy_turn(hero, enemy, key, combat_log):
 
 def hero_turn(hero, enemy, action, combat_log, screen):
 
-    previous_action = action
+    previous_action = ''
+    if action == '1' or action == '3':
+        previous_action = action
+
     if hero.stunned_or_not():
         action = "4"
 
@@ -166,29 +170,31 @@ def hero_turn(hero, enemy, action, combat_log, screen):
                     magic_attack = True
                     break
             if magic_attack:
-                enemy_mental_dodge(hero, hero.magic_power,
-                                 enemy, combat_log)
+                if enemy_mental_dodge(hero, hero.magic_power,
+                                    enemy, combat_log):
+                    abilities.enemy_magic_hit(screen)
             else:
-                enemy_block_dodge(hero, enemy, combat_log)
+                if enemy_block_dodge(hero, enemy, combat_log):
+                    abilities.enemy_hit(screen)
             hero.mana += round(hero.max_mana / 50)
 
         case "1":
             hero.defend(combat_log)
 
         case "a":
-            casted = hero.abilities[0].use_ability(hero, enemy, combat_log)
+            casted = hero.abilities[0].use_ability(hero, enemy, combat_log, screen)
             if casted:
                 action = "z"
         case "b":
-            casted = hero.abilities[1].use_ability(hero, enemy, combat_log)
+            casted = hero.abilities[1].use_ability(hero, enemy, combat_log, screen)
             if casted:
                 action = "y"
         case "c":
-            casted = hero.abilities[2].use_ability(hero, enemy, combat_log)
+            casted = hero.abilities[2].use_ability(hero, enemy, combat_log, screen)
             if casted:
                 action = "x"
         case "d":
-            casted = hero.abilities[3].use_ability(hero, enemy, combat_log)
+            casted = hero.abilities[3].use_ability(hero, enemy, combat_log, screen)
             if casted:
                 action = "w"
 
@@ -214,7 +220,9 @@ def hero_turn(hero, enemy, action, combat_log, screen):
                 text = f'{hero.name} ist BENOMMEN und kann nichts tun'
                 combat_log.add(text)
 
-    action = previous_action
+    if previous_action and action == '4':
+        action = previous_action
+    
     return action
 
 
@@ -295,6 +303,6 @@ def train_hero(hero):#only called during the beginning
     hero.abilities.append(Ability4())
     hero.abilities.append(Ability3())
     #hero.abilities.append(Ability0())
-    #hero.abilities.append(Ability7())
+    #hero.abilities.append(Ability15())
     #hero.abilities.append(Ability8())
 
