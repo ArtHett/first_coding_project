@@ -179,7 +179,7 @@ class Adventurer(Hero):
     def __init__(self):
         super().__init__("ZERTUS")
         self.max_mana = 200
-        self.mental_resistance = 10
+        self.mental_reduction = 10
         self.mana = int(self.max_mana / 2)
         self.life = 60
         self.max_inventory = 4
@@ -188,6 +188,15 @@ class Adventurer(Hero):
 
 def draw_map(position, dungeon, screen):
     
+    pygame.draw.rect(screen, (0, 0, 0),
+                     (0, 0, 1200, 800),
+                     20)# 'window' border
+
+    pygame.draw.rect(screen, (0, 0, 0),
+                     (350 - 20, 160 - 20,
+                    (len(dungeon[0])*70) + 40, (len(dungeon)*70) + 40),
+                    20)#dungeon border
+
     for i, x in enumerate(dungeon):
         for j, y in enumerate(x):
             
@@ -196,25 +205,24 @@ def draw_map(position, dungeon, screen):
             pygame.draw.rect(
                 screen,
                 y.get_color(inside),
-                (350 + j*70, 160 + i*70, 70, 70))
+                (350 + j * 70, 160 + i * 70, 70, 70))
 
             if y.image is not None:
-                screen.blit(y.image, (350 + j*70, 160 + i*70, 70, 70))
+                screen.blit(y.image, (350 + j * 70, 160 + i * 70, 70, 70))
 
 
 def sort_inventory(hero):
-
-    active = []
+    '''Very important for item usage'''
+    active = [item for item in hero.inventory if not item.gear]
     inactive = []
 
     for item in hero.inventory:
-        if item.active:
+        if item.gear and item.active:
             active.append(item)
-        else:
+        elif item.gear:
             inactive.append(item)
-
+        
     hero.inventory = active + inactive
-    return hero.inventory
 
 
 pygame.init()
@@ -223,7 +231,7 @@ screen = pygame.display.set_mode((1200,800))
 pygame.display.set_caption("Dungeon")
 clock = pygame.time.Clock()
 
-stage = 4
+stage = 4 #game begins at stage = 0
 dungeon = world.generate_world(stage)
 hero = Adventurer()
 world.arm_hero(hero)
@@ -237,6 +245,7 @@ while hero.life > 0:
     combat.hero_interface(hero, screen)
     buttons = buttons_clog.dungeon_inventory(hero, screen)
     
+    #*** INPUTS ***
     for event in pygame.event.get():
 
         if event.type == pygame.QUIT:
@@ -246,13 +255,14 @@ while hero.life > 0:
             position = world.movement(dungeon, position, event)
 
         elif event.type == pygame.MOUSEBUTTONDOWN:
-            buttons_clog.dungeon_buttons_clicked(hero, buttons, screen, event)
+            buttons_clog.dungeon_buttons_clicked(hero, buttons, event)
+    #*** INPUTS ***
         
-    hero.inventory = sort_inventory(hero)
+    sort_inventory(hero)
 
     #*** HIDDEN-RANDOM ***
     if dungeon[position[0]][position[1]].random == True:
-        magic_number =randint(0, 100)
+        magic_number = randint(0, 100)
         match magic_number:
             case magic_number if magic_number in (0, 40):
                 dungeon[position[0]][position[1]] = world.EmptyRoom()
@@ -339,5 +349,4 @@ while hero.life > 0:
     #*** BOSS FIGHT ***
 
     clock.tick(30)
-    #HI_d89cf752-cf12-43e1-9eeb-a5ea7abc3b0a
     pygame.display.flip()
