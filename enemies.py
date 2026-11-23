@@ -118,15 +118,14 @@ class Enemy:
         if image_path != None:
             self.image = pygame.image.load(
                 image_path).convert_alpha()
-            self.image =pygame.transform.scale(self.image, (300, 300))
+            self.image = pygame.transform.scale(self.image, (250, 300))
             self.rect = self.image.get_rect()
-            self.rect.center = (650, 250)
+            self.rect.center = (650, 280)
         else:
             self.image = None
             self.rect = None
         
         self.font = pygame.font.SysFont(None, 40)
-
 
     def blitme(self, screen):
         """Draw enemy sprite at middle position"""
@@ -134,7 +133,6 @@ class Enemy:
             screen.blit(self.image, self.rect)
         else:
             pass
-
 
     def _overhp_over_hp(self, hero, hp_loss):    
         hp_loss -= hero.over_hp
@@ -145,10 +143,8 @@ class Enemy:
             hp_loss = 0
         return hp_loss
 
-
     def _critical_hit(self, combat_log):
-        magic_number = random.randint(0, 100)
-        if magic_number < self.critical:
+        if random.randint(0, 100) < self.critical:
             text = "KRITISCHER TREFFER!!"
             combat_log.add(text, True)
             crit_factor = 1.5
@@ -236,7 +232,10 @@ class Enemy:
     def _life_steal(self, hero, combat_log):
         text = f'Es dürstet {self.name} nach Blut!'
         combat_log.add(text, True)
+        malus = round(self.damage * 0.3)
+        self.damage - malus
         damage_taken = self._basic_attack(hero, combat_log)
+        self.damage + malus
         if damage_taken > 0:
             self._heal_self(damage_taken, combat_log)
 
@@ -295,9 +294,20 @@ class Enemy:
     def _fire_seal(self, hero, combat_log, power, duration):
         text = f'{self.name} beschwört ein Feuersiegel'
         combat_log.add(text, True)
-        text = f'auf {hero.name}s Haut'
+        text = f'Auf {hero.name}s Haut'
         combat_log.add(text, True)
         abilities.FireSeal(power, duration).buff(hero)
+
+    def _rage(self, combat_log, power, duration):
+        text = f'{self.name} vergießt sein Blut'
+        combat_log.add(text, True)
+        text = 'Um die eigene Macht zu vergrößen'
+        combat_log.add(text, True)
+        abilities.Empowered(power, duration).buff(self)
+        abilities.Deadly(round(power/2), duration).buff(self)
+        self.life =- power
+        if self.life <= 0:
+            self.life = 1
 
     def _dissappear(self, hero, combat_log):
         text = f'{self.name} spricht die Phrasen'
@@ -317,7 +327,6 @@ class Enemy:
             self.over_hp = 0
         else:
             self.over_hp = round(self.over_hp * 0.7)
-
     
     def stunned_or_not(self):
         magic_number = random.randint(0, 100)
@@ -345,6 +354,7 @@ boss_1 = 'images/akt1_boss_infernodämon.png'
 
 @register(rank='easy')
 class EasyPool1(Enemy):
+
     def __init__(self):
         super().__init__("GROSSE RATTE", 33, 33, 17, 55,
                         easy_pool_1 , dodge=7,
@@ -353,16 +363,23 @@ class EasyPool1(Enemy):
     def _frenzy(self, combat_log):#ENEMY-MOVE
         text = f"{self.name} wird schneller."
         combat_log.add(text, True)
-        abilities.AdrenalinE2E(5, 3).buff(self)
-        self._block(3, combat_log)
+        abilities.Adrenalin(7, 3).buff(self)
+        self._block(4, combat_log)
 
     def _random(self, hero, combat_log):
-        magic_number = random.choice((1, 2))
-        match magic_number:
+        match random.choice((1, 2, 3)):
             case 1:
                 self._basic_attack(hero, combat_log)
             case 2:
                 self._frenzy(combat_log)
+            case 3:
+                if self.life * 3 < self.max_life:
+                    text = f'{self.name} flüchtet blitzschnell!'
+                    combat_log.add(text, True)
+                    return 'escape'
+                else:
+                    text = f'{self.name} ist sich unsicher'
+                    combat_log.add(text, True)
 
     def enemy_ai(self, hero, key, combat_log):
         match key:
@@ -374,10 +391,9 @@ class EasyPool1(Enemy):
                 self._basic_attack(hero, combat_log)
 
     def enemy_intend(self, step, hero):
-        magic_number = random.randint(0, 100)
         if step % 4 == 2:
-            intend, key = "Atk / Buff", 1
-        elif magic_number < 40:
+            intend, key = "?", 1
+        elif random.randint(0, 10) < 4:
             intend, key = "Buff", 2
         else:
             intend, key = "Atk", 3
@@ -386,6 +402,7 @@ class EasyPool1(Enemy):
 
 @register(rank='easy')
 class EasyPool2(Enemy):
+
     def __init__(self):
         super().__init__("MAGISCHER SCHLEIM", 35, 35, 16, 25,
                         easy_pool_2)
@@ -407,12 +424,11 @@ class EasyPool2(Enemy):
                 self._basic_attack(hero, combat_log)
 
     def enemy_intend(self, step, hero):
-        magic_number = random.choice((1, 2))
         if step == 0:
             intend, key = "Debuff", 1
         elif step == 1:
             intend, key = "Block", 2
-        elif magic_number == 1:
+        elif random.choice((1, 2)) == 1:
             intend, key = "Atk", 3
         else:
             intend, key = "Debuff", 4
@@ -457,7 +473,6 @@ class Minion2(Enemy):
     def __init__(self):
         super().__init__("GRÜNER GOBLIN", 40, 40, 24, 45,
                          minion_2)
-        self.counter = 0
 
     def _throw_rock(self, hero, combat_log):#ENEMY-MOVE
         text = f"{self.name} greift nach einem Stein.."
@@ -468,28 +483,32 @@ class Minion2(Enemy):
         abilities.Weak(5, 2).buff(hero)
 
     def enemy_ai(self, hero, key, combat_log):
-        if self.counter == 2:
-            text = f"{self.name} hat sich verausgabt.."
-            combat_log.add(text, True)
-            self.damage -= 12
-            self.speed -= 25
-        self.counter += 1
         match key:
             case 1:
-                magic_number = random.choice((1, 2))
-                match magic_number:
-                    case 1:
-                        self._basic_attack(hero, combat_log)
-                    case 2:
-                        self._throw_rock(hero, combat_log)
-            case 2:
                 self._basic_attack(hero, combat_log)
+            case 2:
+                text = f"{self.name} hat sich verausgabt.."
+                combat_log.add(text, True)
+                self.damage -= 12
+                self.speed -= 25
+                self._block(10, combat_log)
+            case 3:
+                self._rage(combat_log, 5, 4)
+            case 4:
+                if random.choice((1, 2)):
+                    self._basic_attack(hero, combat_log)
+                else:
+                    self._throw_rock(hero, combat_log)
 
     def enemy_intend(self, step, hero):
-        if self.counter < 2:
-            intend, key = "Atk+", 2
+        if step < 2:
+            intend, key = "Atk+", 1
+        elif step == 2:
+            intend, key = "...", 2
+        elif self.life > 12 and random.choice((1, 2, 3, 4)) == 1:
+            intend, key = "Buff", 3
         else:
-            intend, key = "Atk", 1
+            intend, key = "Atk", 4
         text = self.font.render(intend, True, (0, 0, 0))
         return text, key
 
@@ -1005,7 +1024,7 @@ class Minion1Act2(Enemy):
     def enemy_ai(self, hero, key, combat_log):
         match key:
             case 1:
-                self._heal_self(26, combat_log)
+                self._heal_self(self.magic_power*2, combat_log)
             case 2:
                 self._basic_attack(hero, combat_log)
             case 3:
@@ -1018,7 +1037,7 @@ class Minion1Act2(Enemy):
             if self.life < self.max_life * 0.4:
                 intend, key = 'Heal', 1
             else:
-                intend, key = 'Mag', 3
+                intend, key = 'Manaburn', 3
         elif step % 3 == 1:
             intend, key = 'Atk', 2
         elif step % 3 == 2:
@@ -1233,7 +1252,7 @@ class Minion5Act2(Enemy):
     def enemy_intend(self, step, hero):
         if step % 3 == 0:
             intend, key = 'Buff / Buff+', 1
-        elif hero.mana and hero.mana * 2 + hero.magic_power > hero.max_mana:
+        elif step % 3 == 1 and hero.mana + hero.magic_power > 100:
             intend, key = 'ManaBurn', 2
         elif hero.reduction >= 30:
             intend, key = 'Mag', 3
@@ -1298,7 +1317,7 @@ class Minion7Act2(Enemy):
     def __init__(self):
         super().__init__('Garnisons-Soldat', 90, 90, 20, 60,
                         act2_minion_7,
-                        reduction=38, dodge=10, mental_reduction=10,
+                        reduction=30, dodge=10, mental_reduction=10,
                         critical=8)
 
     def soldier_discipline(self, combat_log):
@@ -1319,7 +1338,7 @@ class Minion7Act2(Enemy):
             case 3:
                 self._multi_strike(hero, combat_log, 3)
             case 4:
-                self._block(round((self.max_life+10-self.life)/2), combat_log)
+                self._block(round((self.max_life+10-self.life)/3), combat_log)
             case 5:
                 self.soldier_discipline(combat_log)
             case 6:
@@ -1445,7 +1464,7 @@ class Elite1Act2(Enemy):
 class Elite2Act2(Enemy):
 
     def __init__(self):
-        super().__init__('Abscheulichkeit', 290, 290, 28, 57,
+        super().__init__('Abscheulichkeit', 280, 280, 28, 52,
                         act2_elite_2,
                         dodge=0,
                         critical=6)
@@ -1457,7 +1476,7 @@ class Elite2Act2(Enemy):
             else:
                 text = f'Die {self.name} verströhmt giftiges Gas'
                 combat_log.add(text, True)
-                abilities.Poison(3, 10).buff(hero)
+                abilities.Poison(3, 9).buff(hero)
         elif self.life > self.max_life * 0.6:
             if random.choice((1, 2)) == 1:
                 self._poison_attack(hero, combat_log, 5, 5)
@@ -1470,7 +1489,7 @@ class Elite2Act2(Enemy):
                 self._life_steal(hero, combat_log)
             else:
                 self._basic_attack(hero, combat_log)
-        elif self.life > self.max_life * 0.2:
+        else:
             if random.choice((1, 2)) == 1:
                 self._heal_self(40, combat_log)
             else:
@@ -1483,7 +1502,7 @@ class Elite2Act2(Enemy):
             case 2:
                 self._basic_attack(hero, combat_log)
             case 4:
-                self._block(25, combat_log)
+                self._block(20, combat_log)
             case 1 | 3 | 5:
                 self._random(hero, combat_log)
 
@@ -1507,7 +1526,7 @@ class Elite3Act2(Enemy):
     def __init__(self):
         super().__init__('Erfahrener Magier', 140, 140, 10, 70,
                         act2_elite_3,
-                        reduction=15, mental_reduction=35,
+                        reduction=10, mental_reduction=35,
                         magic_power=25)
         self.power_block = True
 
@@ -1518,7 +1537,7 @@ class Elite3Act2(Enemy):
                 combat_log.add(text, True)
                 text = f'{self.name} bereitet sich auf den Kampf vor'
                 combat_log.add(text, True)
-                abilities.AbilityPower(15, 5).buff(self)
+                abilities.AbilityPower(18, 5).buff(self)
             case 2:
                 if self.power_block:
                     self._block(self.magic_power * 2, combat_log)
@@ -1530,7 +1549,7 @@ class Elite3Act2(Enemy):
             case 4:
                 text = '"Es ist noch nicht vorbei.."'
                 combat_log.add(text, True)
-                abilities.AbilityPower(15, 4).buff(self)
+                abilities.AbilityPower(11, 4).buff(self)
             case 5:
                 self._heal_self(self.magic_power, combat_log)
             case 6:
@@ -1552,10 +1571,12 @@ class Elite3Act2(Enemy):
             else:
                 intend, key = 'Buff', 4
         elif self.life > 50:
-            if step % 2 == 0:
+            if step % 3 == 0:
                 intend, key = 'Mag', 3
-            else:
+            elif step % 3 == 1:
                 intend, key = 'Block', 2
+            else:
+                intend, key = 'Buff', 4
         else:
             if random.choice((1, 2)) == 1:
                 intend, key = 'Heal', 5
