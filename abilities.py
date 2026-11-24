@@ -571,7 +571,7 @@ class Ability8(Ability): #SCHILD-HALTUNG
         super().__init__('SCHILD-HALTUNG', 16, 15, 300,
                          harden)
         
-    def use_ability(self, hero, enemy, combat_log):
+    def use_ability(self, hero, enemy, combat_log, screen):
         if self.cool_down == 0:
             if hero.mana >= self.cost:
                 text = f"{hero.name}'s Konstitution wächst."
@@ -602,7 +602,7 @@ class Ability9(Ability): #HEILUNG
             super().__init__("HEILUNG", 56, 40, 355,
                             simple_heal)#power must be mod 8
             
-    def use_ability(self, hero, enemy, combat_log):
+    def use_ability(self, hero, enemy, combat_log, screen):
             if self.cool_down == 0:
                 if hero.mana >= self.cost:
                     text = f"{hero.name} heilt sich mit Magie."
@@ -690,13 +690,20 @@ class Ability11(Ability):#BLITZSCHLAG
             text = f'Ein Blitz schiesst aus {hero.name} Fingern!'
             combat_log.add(text)
 
+            self._cost_and_cooldown(hero, self.cost)
+            lightning_symbol(screen, 570, 170, size=50)
+            lightning_symbol(screen, 730, 230, size=50)
+
             sp = self.power + hero.magic_power
-            if enemy_mental_dodge(hero, sp, enemy, combat_log) > 0:
+            dmg = enemy_mental_dodge(hero, sp, enemy, combat_log)
+            if dmg > 0:
                 text = f"{enemy.name} wurde geschockt."
                 combat_log.add(text)
                 Shock(12, 3).buff(enemy)
 
-            self._cost_and_cooldown(hero, self.cost)
+            if dmg:#VISUAL
+                vertical_beam(screen)
+
             return True
         else:
             text = f'{hero.name} konzentriert sich doch nichts passiert.'
@@ -718,9 +725,16 @@ class Ability12(Ability):#DOPPELSCHLAG
             self._cost_and_cooldown(hero, self.cost)
 
             hero.damage += self.power
-            if enemy_block_dodge(hero, enemy, combat_log) > 0:
-                enemy_block_dodge(hero, enemy, combat_log)
+            first_hit = enemy_block_dodge(hero, enemy, combat_log)
+            if first_hit > 0:
+                second_hit = enemy_block_dodge(hero, enemy, combat_log)
             hero.damage -= self.power
+
+            if first_hit:#VISUAL
+                enemy_hit_vert(screen)
+            if second_hit:#VISUAL
+                enemy_hit_hor(screen)
+
             return True
         else:
             text = "Versuche es erstmal mit EINEM Schlag."
@@ -743,14 +757,17 @@ class Ability13(Ability):#SCHWERTTANZ
                 combat_log.add(text)
 
                 hero.dodge += self.power#UNDO
+
+                self._cost_and_cooldown(hero, self.cost, cooldown=5)
                 
                 magic_number = random.randint(0, 3)
                 Agile(self.power - magic_number,
                          3 + magic_number).buff(hero)
                 Empowered(self.power + magic_number,
                          5 - magic_number).buff(hero)
+
+                draw_arrow(screen, 750, 590, color=(50, 50, 250))#VISUAL
                 
-                self._cost_and_cooldown(hero, self.cost, cooldown=5)
                 return True
             else:
                 text = f'{hero.name} fehlt die Ausdauer für diese Technik.'
@@ -771,7 +788,7 @@ class Ability14(Ability):#WINTERFAUST
         super().__init__('Winterfaust', 40, 35, 1200,
                         winter_fist)
         
-    def use_ability(self, hero, enemy, combat_log):
+    def use_ability(self, hero, enemy, combat_log, screen):
         if self.cool_down == 0:
             if hero.mana >= self.cost:
                 text = f"{hero.name} beschwört den tiefsten Winter"
