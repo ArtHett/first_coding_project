@@ -113,7 +113,6 @@ class Enemy:
         self.accuracy = accuracy
         self.over_hp = 0
         self.buffs = []
-        self.boss = False
 
         if image_path != None:
             self.image = pygame.image.load(
@@ -538,7 +537,7 @@ class Minion3(Enemy):
                 text = f"{self.name} wechselt in die Geisterwelt."
                 combat_log.add(text, True)
             case 3:
-                if hero.mana > 0:
+                if hero.mana > 5:
                     self._mana_burn(hero, combat_log)
                     text = f"{self.name} entzieht die magische Essenz."
                     combat_log.add(text, True)
@@ -559,7 +558,10 @@ class Minion3(Enemy):
         elif step % 2 == 0:
             intend, key = "Atk", 2
         else:
-            intend, key = "Mag", 3
+            if hero.mana > 5:
+                intend, key = "ManaBurn", 3
+            else:
+                intend, key = "Mag", 3
         text = self.font.render(intend, True, (0, 0, 0))
         return text, key
 
@@ -626,25 +628,20 @@ class Minion5(Enemy):
             case 1:
                 self._basic_attack(hero, combat_log)
             case 2:
-                magic_number = random.randint(0, 1)
-                if magic_number == 1:
-                    self._fortify(combat_log)
-                else:
-                    self._basic_attack(hero, combat_log)
+                self._fortify(combat_log)
             case 3:
-                magic_number = random.randint(0, 1)
-                if magic_number == 1:
-                    self._block(12, combat_log)
-                else:
-                    self._basic_attack(hero, combat_log)
+                self._block(13, combat_log)
 
     def enemy_intend(self, step, hero):
         if step % 3 == 0:
             intend, key = "Atk", 1
-        elif self.life > self.max_life * 0.6:
-            intend, key = "Atk / BUFF", 2
+        elif random.choice((1, 2)) == 1:
+            intend, key = "Atk", 1
         else:
-            intend, key = "Atk / BLOCK", 3
+            if self.life * 2 > self.max_life:
+                intend, key = "Buff", 2
+            else:
+                intend, key = "Block", 3
         text = self.font.render(intend, True, (0, 0, 0))
         return text, key
 
@@ -670,8 +667,6 @@ class Minion6(Enemy):
                 self._basic_attack(hero, combat_log)
             case 4:
                 self._heal_self(18, combat_log)
-            case 5:
-                self._block(18, combat_log)
 
     def enemy_intend(self, step, hero):
         if step == 0:
@@ -685,7 +680,7 @@ class Minion6(Enemy):
             if hero.life > self.life * 2:
                 intend, key = 'Heal', 4
             else:
-                intend, key = 'Block', 5
+                intend, key = 'Block', 2
         text = self.font.render(intend, True, (0, 0, 0))
         return text, key
 
@@ -699,8 +694,7 @@ class Minion7(Enemy):
                         magic_power=12)
         
     def _random(self, hero, combat_log):
-        magic_number = random.randint(0, 1)
-        if magic_number == 1:
+        if random.choice((1, 2)) == 1:
             self._block(15, combat_log)
         else:
             if self.damage > self.magic_power + 1:
@@ -767,19 +761,17 @@ class Elite1(Enemy):
             case 2:
                 self._war_cry(hero, combat_log)
             case 3:
-                magic_number = random.randint(0, 100)
-                if magic_number <= 65:
-                    self._basic_attack(hero, combat_log)
-                else:
-                    self._war_cry(hero, combat_log)
+                self._basic_attack(hero, combat_log)
 
     def enemy_intend(self, step, hero):
         if step == 0:
             intend, key = "Atk+", 1
         elif step == 1:
-            intend, key = "Debuff", 2
+            intend, key = "DEBUFF", 2
+        elif random.randint(0, 100) <= 65:
+            intend, key = "Atk", 3
         else:
-            intend, key = "Atk / Debuff", 3
+            intend, key = "DEBUFF", 2
         text = self.font.render(intend, True, (0, 0, 0))
         return text, key
 
@@ -805,8 +797,7 @@ class Elite2(Enemy):
             abilities.Harden(15, 3).buff(self)
 
     def _random(self, hero, combat_log):
-        magic_number = random.choice((1, 2, 3))
-        match magic_number:
+        match random.choice((1, 2, 3)):
             case 1:
                 self._basic_attack(hero, combat_log)
             case 2:
@@ -820,8 +811,6 @@ class Elite2(Enemy):
                 self._basic_attack(hero, combat_log)
             case 2:
                 self._harden_or_burst(hero, combat_log)
-            case 3:
-                self._basic_attack(hero, combat_log)
             case 4:
                 self._block(17, combat_log)
             case 5:
@@ -831,9 +820,9 @@ class Elite2(Enemy):
         if step == 0:
             intend, key = "Atk", 1
         elif self.life >= self.max_life * 0.9:
-            intend, key = "Buff", 2
+            intend, key = "BUFF", 2
         elif self.life >= self.max_life * 0.8:
-            intend, key = "Atk", 3
+            intend, key = "Atk", 1
         elif self.life >= self.max_life * 0.7:
             intend, key = "Block", 4
         else:
@@ -861,35 +850,30 @@ class Elite3(Enemy):
         abilities.Slow(10, 2).buff(hero)
 
     def enemy_ai(self, hero, key, combat_log):
-        magic_number = random.choice((1, 2))
         match key:
             case 1:
                 self._block(30, combat_log)
             case 2:
-                if magic_number == 1:
-                    self._basic_attack(hero, combat_log)
-                else:
-                    self._ability_1(combat_log)
+                self._basic_attack(hero, combat_log)
             case 3:
-                if magic_number == 1:
-                    self._basic_attack(hero, combat_log)
-                else:
-                    self._ability_2(hero, combat_log)
+                self._ability_1(combat_log)
             case 4:
-                if magic_number == 1:
-                    self._basic_attack(hero, combat_log)
-                else:
-                    self._block(17, combat_log)
+                self._ability_2(hero, combat_log)
+            case 5:
+                self._block(17, combat_log)
 
     def enemy_intend(self, step, hero):
         if step == 0:
-            intend, key = "Block", 1
-        elif step % 3 == 2:
-            intend, key = "Atk / Buff", 2
-        elif step % 3 == 1:
-            intend, key = "Atk / Debuff", 3
-        elif step % 3 == 0:
-            intend, key = "Atk / Block", 4
+            intend, key = "Block+", 1
+        elif random.choice((1, 2)) == 1:
+            intend, key = "Atk", 2
+        else:
+            if step % 3 == 2:
+                intend, key = "BUFF", 3
+            elif step % 3 == 1:
+                intend, key = "DEBUFF", 4
+            elif step % 3 == 0:
+                intend, key = "Block", 5
         text = self.font.render(intend, True, (0, 0, 0))
         return text, key
 
@@ -899,11 +883,10 @@ class Elite3(Enemy):
 class Boss1(Enemy):
 
     def __init__(self):
-        super().__init__("INFERNO-DÄMON", 330, 330, 12, 50,
+        super().__init__("INFERNO-DÄMON", 330, 330, 12, 60,
                         boss_1,
                         reduction=10, dodge=10, mental_reduction=10,
                         magic_power=6)
-        self.boss = True
         
     def enemy_ai(self, hero, key, combat_log):
         match key:
@@ -935,7 +918,7 @@ class Boss1(Enemy):
         elif step % 4 == 3:
             intend, key = "Mag", 4
         elif step % 4 == 0:
-            intend, key = "Pwr++", 5
+            intend, key = "Pwr+", 5
         text = self.font.render(intend, True, (0, 0, 0))
         return text, key
 
