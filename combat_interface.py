@@ -164,7 +164,7 @@ def enemy_visuals(hero, enemy, screen, step):
     """Enemy-Sprites and enemy-intent icon"""
     enemy.blitme(screen)
     text, key = enemy.enemy_intend(step, hero)
-    screen.blit(text, (710, 150))
+    screen.blit(text, (800, 120))
     return key
 
 
@@ -222,5 +222,5 @@ def show_enemy_buffs(enemy, screen):
         buff_text = f"{buff}({buff.duration})"
         text = font.render(
             buff_text, True, (0, 0, 0))
-        screen.blit(text, (x, 100))
+        screen.blit(text, (x, 90))
         x += 80

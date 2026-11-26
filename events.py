@@ -1,11 +1,12 @@
 from time import sleep
 import random
-import world, buttons_clog, combat
 
 import pygame
 
+import world, buttons_clog, combat
 
 act_1_pool, act_2_pool, act_3_pool = [], [], []
+
 
 def register(act=0):
 
@@ -168,9 +169,9 @@ def event_0(hero, stage, screen):
 
     answers = [choice_1, choice_2, choice_3, choice_4]
 
-    font,buttons,y=standard_event_constructor(hero,intro,answers,screen)
+    _,buttons,_=standard_event_constructor(hero,intro,answers,screen)
 
-    choice = buttons_clog.display_answers_clicked(buttons, screen, font)
+    choice = buttons_clog.display_answers_clicked(buttons, screen)
     match choice:
         case 1:
             hero.xp += 75
@@ -925,12 +926,9 @@ def event_3_act_2(hero, stage, screen):
     intro = [start, a,]
 
     choice_1 = 'Seegen des Landarbeiters[+7 Max Leben]'
+    choice_2 = 'Seegen des Kriegers[+2 Crit. Chance]'
 
-    answers = [choice_1]
-
-    if hero.speed >= 70:
-        choice_2 = 'Seegen des Kriegers[+2 Crit. Chance]'
-        answers.append(choice_2)
+    answers = [choice_1, choice_2]
     
     if hero.mental_reduction >= 10:
         choice_3 = 'Seegen des Gelehrten[+15 Max Odem]'
@@ -943,23 +941,23 @@ def event_3_act_2(hero, stage, screen):
     match choice:
         case 1:
             hero.max_life += 7
-            raw_text = 'Ich segne deine Gesundheit, möge sie'
+            raw_text = 'Ich segne deine Gesundheit, möge diese'
             y = display_outro(hero, raw_text, y, screen, font)
-            raw_text = 'allen Widrigkeiten des Lebens widerstehen'
+            raw_text = 'Allen Widrigkeiten des Lebens widerstehen'
             y = display_outro(hero, raw_text, y, screen, font)
 
         case 2:
             hero.critical += 2
             raw_text = 'Ich segne deinen Mut, möge dieser'
             y = display_outro(hero, raw_text, y, screen, font)
-            raw_text = 'im Angesicht des Bösen dich nicht verlassen'
+            raw_text = 'Im Angesicht des Bösen dich nicht verlassen'
             y = display_outro(hero, raw_text, y, screen, font)
 
         case 3:
             hero.max_mana += 15
             raw_text = 'Ich segne deinen Geist, möge er'
             y = display_outro(hero, raw_text, y, screen, font)
-            raw_text = 'dir ein Licht in den schwersten Stunden sein'
+            raw_text = 'Dir ein Licht in den schwersten Stunden sein'
             y = display_outro(hero, raw_text, y, screen, font)
     return None
 
@@ -1148,6 +1146,7 @@ def event_5_act_2(hero, stage, screen):
 
     match choice:
         case 1:
+            prev_xp = hero.xp #display loss/gain
             if random.choice((1, 2)) == 1:
                 raw_text = 'Die Kultisten scheinen wieder von dir abzulassen'
                 y = display_outro(hero, raw_text, y, screen, font)
@@ -1165,8 +1164,11 @@ def event_5_act_2(hero, stage, screen):
                 hero.xp -= 400
                 if hero.xp < 0:
                     hero.xp = 0
+                raw_text = f'-{prev_xp-hero.xp} Erz'
+                y = display_outro(hero, raw_text, y, screen, font)
 
         case 2:
+            prev_xp = hero.xp #display loss/gain
             if hero.mental_resistance >= 25:
                 raw_text = f'{hero.name} wehrst die mentalen Angriffe stoisch ab'
                 y = display_outro(hero, raw_text, y, screen, font)
@@ -1190,21 +1192,28 @@ def event_5_act_2(hero, stage, screen):
                     hero.xp = 0
                 raw_text = f'"Erbärmlich Fremder", die Kultisten wende sich ab'
                 y = display_outro(hero, raw_text, y, screen, font)
+                raw_text = f'-{prev_xp-hero.xp} Erz'
+                y = display_outro(hero, raw_text, y, screen, font)
 
         case 3:
+            prev_xp, prev_mana = hero.xp, hero.mana#display loss/gain
             magic_number = random.randint(hero.magic_power, 100)
             magic_number += hero.magic_power
-            if magic_number >= 50:
+            if magic_number >= 55:
                 hero.mana += round(hero.max_mana * 0.5)
                 if hero.mana > hero.max_mana:
                     hero.mana = hero.max_mana
                 raw_text = f'{hero.name} kann seiner seits massiven'
                 y = display_outro(hero, raw_text, y, screen, font)
-                raw_text = 'mentalen Druck auf die Kultisten ausüben'
+                raw_text = 'Mentalen Druck auf die Kultisten ausüben'
                 y = display_outro(hero, raw_text, y, screen, font)
                 raw_text = f'Erschrocken und ungläubig machen sie {hero.name}'
                 y = display_outro(hero, raw_text, y, screen, font)
-                raw_text = 'genug Platz und meiden seinen Blickkontakt'
+                raw_text = 'Genug Platz und meiden seinen Blickkontakt'
+                y = display_outro(hero, raw_text, y, screen, font)
+                raw_text = f'Erhobenen Hauptes schreitet {hero.name} davon'
+                y = display_outro(hero, raw_text, y, screen, font)
+                raw_text = f'-{prev_mana-hero.mana} Odem'
                 y = display_outro(hero, raw_text, y, screen, font)
             else:
                 hero.xp -= 400
@@ -1220,6 +1229,8 @@ def event_5_act_2(hero, stage, screen):
                 raw_text = '"Du hast wilde Pläne.. gib lieber auf"'
                 y = display_outro(hero, raw_text, y, screen, font)
                 raw_text = '"Finde dich mit deinem Schicksal ab!"'
+                y = display_outro(hero, raw_text, y, screen, font)
+                raw_text = f'-{prev_xp-hero.xp} Erz und -{prev_mana-hero.mana} Odem'
                 y = display_outro(hero, raw_text, y, screen, font)
     return None
 

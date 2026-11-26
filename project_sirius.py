@@ -2,8 +2,10 @@ import sys
 from dataclasses import dataclass, field
 from collections import deque
 from random import randint
-import world, combat, events, buttons_clog
+
 import pygame
+
+import world, combat, events, buttons_clog
 
 
 @dataclass(slots=True)#Fancy new class definition
@@ -178,12 +180,40 @@ class Adventurer(Hero):
 
     def __init__(self):
         super().__init__("ZERTUS")
-        self.max_mana = 200
-        self.mental_reduction = 10
-        self.mana = int(self.max_mana / 2)
-        self.life = 60
-        self.max_inventory = 4
-        self.xp = 450
+        #self.max_mana = 200
+        #self.mental_reduction = 10
+        #self.mana = int(self.max_mana / 2)
+        #self.life = 60
+        #self.max_inventory = 4
+        #self.xp = 450
+
+
+def arm_hero(hero):#only called during the beginning
+
+    items = ()
+    #items = (world.MoonStone(), world.MagicWand(),
+    #        world.SimpleWarmogs(),world.TalismasOfTheRighteous())
+    #items = (world.ShortSword(), world.RitualDagger(), world.ElvenBoots(),
+    #         world.TalismasOfTheRighteous())
+
+    try:
+        for item in items:
+            if item.gear:
+                item.equip(hero)
+            else:
+                item._append(hero)
+    except TypeError:
+        if items.gear:
+            items.equip(hero)
+        elif not items:
+            pass
+        else:
+            items._append(hero)
+
+
+def train_hero(hero):#only called during the beginning
+    hero.abilities.append(combat.Ability0())
+    #hero.abilities.append(combat.Ability13())
 
 
 def draw_map(position, dungeon, screen):
@@ -231,11 +261,10 @@ screen = pygame.display.set_mode((1200,800))
 pygame.display.set_caption("Dungeon")
 clock = pygame.time.Clock()
 
-stage = 4 #game begins at stage = 0
+stage = 0 #game begins at stage = 0
 dungeon = world.generate_world(stage)
 hero = Adventurer()
-world.arm_hero(hero)
-combat.train_hero(hero)
+arm_hero(hero), train_hero(hero)
 position = [0, 0]
 
 while hero.life > 0:

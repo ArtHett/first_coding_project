@@ -1,11 +1,12 @@
-import random
 from time import sleep
-from world_rooms import *
-from items import *
-import abilities, buttons_clog
-from combat_interface import hero_interface
+import random
 
 import pygame
+
+from combat_interface import hero_interface
+import abilities, buttons_clog
+from world_rooms import *
+from items import *
 
 
 def generate_world(stage):
@@ -52,16 +53,18 @@ def bond_fire(hero, stage, screen):
     action = buttons_clog.display_answers_clicked(buttons, screen)
     match action:
         
-        case "0":
+        case 1:
             healing = round(hero.max_life / 2)
             hero.life += healing
             if hero.life > hero.max_life:
                 hero.life = hero.max_life
         
-        case "1":
-            hero.mana = hero.max_mana
+        case 2:
+            hero.mana += round(hero.max_mana * 0.75)
+            if hero.mana > hero.max_mana:
+                hero.mana = hero.max_mana
         
-        case "2":
+        case 3:
             hero.xp += round(hero.xp / 2)
 
     screen.fill((20, 255, 20))
@@ -194,7 +197,7 @@ def merchant_loop(hero, screen, merchant_offer, merchant_buttons, hero_left):
 
 def reward(hero, enemy, stage, screen):
     
-    screen.fill((50, 50, 50))
+    screen.fill((100, 100, 100))
     hero_interface(hero, screen)
     pygame.display.flip()
 
@@ -252,7 +255,7 @@ def reward(hero, enemy, stage, screen):
 def boss_reward(hero, stage, screen):
 
     screen.fill((150, 50, 50)), pygame.display.flip()
-    buttons = buttons_clog.boss_reward_and_buttons(hero, screen)
+    buttons = buttons_clog.boss_reward_and_buttons(screen)
 
     choice = buttons_clog.display_answers_clicked(buttons, screen)
     match choice:
@@ -338,7 +341,7 @@ def max_inventory(hero, item, screen, font, y):
 
     answer = buttons_clog.display_answers_clicked(buttons, screen)
     pygame.draw.rect(                               #drawn to cover up
-        screen, (50, 50, 50), (300, 500, 400, 300)) #old buttons
+        screen, (100, 100, 100), (300, 500, 350, 150)) #old buttons
     pygame.display.flip()
 
     match answer:
@@ -363,7 +366,7 @@ def release_item(hero, item, screen, font, y):
     
     reward = item #stores reward before item-variable changes
     
-    buttons = buttons_clog.item_buttons(hero ,screen)
+    buttons = buttons_clog.item_buttons(hero)
 
     text = "Welchen Gegenstand auflösen?"
     y = buttons_clog.display_text(text, y, screen, font)
@@ -406,22 +409,4 @@ def release_item(hero, item, screen, font, y):
         reward._append(hero)
     
     return y
-
-
-def arm_hero(hero):#only called during the beginning
-    #items = (WarBow(), ItemBelt(), SobiMask(), ShortSword(), Item1())
-    items = (ShortSword(), RitualDagger(), ElvenBoots(),
-             TalismasOfTheRighteous())#arbitrary loot after first boss
-
-    try:
-        for item in items:
-            if item.gear:
-                item.equip(hero)
-            else:
-                item._append(hero)
-    except TypeError:
-        if items.gear:
-            items.equip(hero)
-        else:
-            items._append(hero)
 

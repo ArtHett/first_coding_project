@@ -124,7 +124,7 @@ def procedual_dungeon(stage):
         case 1:
             rnd_room = choices(
             population=[o, e, r, m],
-            weights=[30, 45, 24, 1], k=20)
+            weights=[32, 43, 24, 1], k=20)
 
             template = [[o, o, x, x, o],
                         [o, o, x, x, x],
@@ -136,7 +136,7 @@ def procedual_dungeon(stage):
         case 4:
             rnd_room = choices(
             population=[o, e, r, c, m],
-            weights=[30, 42, 23, 4, 1], k=35)
+            weights=[35, 37, 23, 4, 1], k=35)
 
             template = [[o, o, x, x, x, o],
                         [o, x, x, x, x, e],
@@ -171,7 +171,7 @@ def procedual_dungeon_elite(stage):
         case 2:
             rnd_rooms = choices(
             population=[o, e, r, m],
-            weights=[29, 49, 19, 3], k=20) 
+            weights=[32, 43, 24, 1], k=20) 
 
             template = [[o, o, x, x, o],
                         [o, o, x, x, x],
@@ -183,7 +183,7 @@ def procedual_dungeon_elite(stage):
         case 5:
             rnd_rooms = choices(
             population=[o, e, r, c, m],
-            weights=[28, 42, 19, 8, 3], k=35) 
+            weights=[35, 36, 18, 8, 3], k=35) 
 
             template = [[o, o, x, x, x, o],
                         [o, x, x, x, x, o],
@@ -196,7 +196,7 @@ def procedual_dungeon_elite(stage):
         case 8:
             rnd_rooms = choices(###
             population=[o, e, r, c, m],
-            weights=[26, 39, 16, 16, 3], k=40) 
+            weights=[32, 33, 16, 16, 3], k=40) 
 
             template = [[o, o, o, e, o, e, o],
                         [o, x, x, x, x, x, x],

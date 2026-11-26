@@ -1,5 +1,6 @@
-import pygame
 from time import sleep
+
+import pygame
 
 
 class CombatLog:
@@ -10,7 +11,7 @@ class CombatLog:
         self.screen = screen
         self.font = font
 
-    def add(self, text, isEnemy=False):
+    def add(self, text, isEnemy=False, time=1.3):
 
         text_tuple = (text, isEnemy)
         self.messages.append(text_tuple)
@@ -19,7 +20,7 @@ class CombatLog:
         if len(self.messages) > 10:
             self.messages.pop(0)
         
-        pygame.display.flip(), sleep(1.3)
+        pygame.display.flip(), sleep(time)
 
     def draw(self):
 
@@ -132,7 +133,7 @@ def bond_fire_buttons(hero):
     250, 70, f"+{round(hero.max_life / 2)} HP", 1)
 
     button_mana = Button(475, 450,
-    250, 70, f"+{hero.max_mana} Odem", 2)
+    250, 70, f"+{round(hero.max_mana * 0.75)} Odem", 2)
 
     button_xp = Button(475, 550,
     250, 70, f"+{round(hero.xp * 0.5)} XP", 3)
@@ -204,6 +205,9 @@ def display_answers(answers):
             i += 1
 
         return buttons
+    
+    else:
+        pass
 
 
 def buttons_right_bottom_corn():

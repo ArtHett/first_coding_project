@@ -454,7 +454,7 @@ class ManaMantle(Gear):
 
     def __init__(self):
         super().__init__("Mantel der \n Intelligenz",
-                        25, 132, '', mana_mantle)
+                        30, 132, '', mana_mantle)
         
     def equip(self, hero):
         hero.inventory.append(self)
@@ -1008,7 +1008,7 @@ class Shield(Gear):
         super().__init__('WÄCHTERSCHILD',
                         10, 580, '', shield)
         self.extra_armor = self.power
-        self.extra_shield = self.power
+        self.extra_shield = round(self.power / 2)
         
     def equip(self, hero):
         hero.inventory.append(self)

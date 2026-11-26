@@ -73,22 +73,6 @@ class FireH2E(Buff):#Brand
 # *** ENEMY --> ENEMY ***
 
 
-class AdrenalinE2E(Buff):#Adrenalin
-
-    def __init__(self, power, duration):
-        super().__init__("adrenal.", power, duration)
-
-    def buff(self, enemy):
-        enemy.buffs.append(self)
-        enemy.speed += self.power
-        enemy.dodge += self.power
-
-    def debuff(self, enemy):
-        enemy.dodge -= self.power
-        enemy.speed -= self.power
-        enemy.buffs.remove(self)
-
-
 class FullDefenseE2E(Buff):
 
     def __init__(self, power, duration):
@@ -106,6 +90,22 @@ class FullDefenseE2E(Buff):
 
 
 #*** --- *** --- *** --- *** --- ***
+
+
+class Adrenalin(Buff):#Adrenalin
+
+    def __init__(self, power, duration):
+        super().__init__("adrenal.", power, duration)
+
+    def buff(self, subject):
+        subject.buffs.append(self)
+        subject.speed += self.power
+        subject.dodge += self.power
+
+    def debuff(self, subject):
+        subject.dodge -= self.power
+        subject.speed -= self.power
+        subject.buffs.remove(self)
 
 
 class Haste(Buff):
@@ -343,7 +343,7 @@ class Barrier(Buff):
         subject.mental_reduction += self.power
 
     def debuff(self, subject):
-        subject.mental_reduction += self.power
+        subject.mental_reduction -= self.power
         subject.buffs.remove(self)
 
 

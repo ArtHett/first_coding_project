@@ -2,10 +2,10 @@ from time import sleep
 from random import randint
 from functools import partial
 
-import buttons_clog
 from combat_interface import *
 from abilities import *
 from enemies import *
+import buttons_clog
 
 
 def start_fight(hero, stage, screen):
@@ -95,7 +95,9 @@ def pre_hero_turn(hero, action, combat_log, screen):
     
     match action:
         case "0":  #Angriff
-            None
+            hero.mana += round(hero.max_mana / 75)
+            if hero.mana > hero.max_mana:  #minor mana
+                hero.mana = hero.max_mana  #recovery
 
         case "1":  #Abwehr
             hero.instant_defend()
@@ -172,14 +174,14 @@ def hero_turn(hero, enemy, action, combat_log, screen):
             if magic_attack:
                 if enemy_mental_dodge(hero, hero.magic_power,
                                     enemy, combat_log):
-                    abilities.enemy_magic_hit(screen)
+                    abilities.enemy_magic_hit(screen)#VISUAL
             else:
                 if enemy_block_dodge(hero, enemy, combat_log):
-                    abilities.enemy_hit(screen)
-            hero.mana += round(hero.max_mana / 50)
+                    abilities.enemy_hit_vert(screen)#VISUAL
 
         case "1":
             hero.defend(combat_log)
+            abilities.defend_symbol(screen)#VISUAL
 
         case "a":
             casted = hero.abilities[0].use_ability(hero, enemy, combat_log, screen)
@@ -199,6 +201,7 @@ def hero_turn(hero, enemy, action, combat_log, screen):
                 action = "w"
 
         case "3":
+            abilities.lightning_symbol(screen, 630, 660)#VISUAL
             active_items = []
             hero.item_use()#only extra dodge for a round 
             for item in hero.inventory:
@@ -206,14 +209,16 @@ def hero_turn(hero, enemy, action, combat_log, screen):
                     active_items.append(item)
             if active_items or hero.pockets:
                 pygame.draw.rect(                               #drawn to cover up
-                    screen, (150,100,0), (650, 500, 1100, 730)) #old buttons
+                    screen, (150,100,0), (830, 550, 370, 250)) #old buttons
                 pygame.display.flip()
                 choice = buttons_clog.item_in_combat(hero, screen)
                 if choice < hero.max_inventory:
-                    action = hero.inventory[choice].use_item(hero, enemy, combat_log)
+                    action = hero.inventory[choice].use_item(
+                                    hero, enemy, combat_log)
                 else:
-                    action = hero.pockets[choice - hero.max_inventory].use_item(hero, enemy, combat_log)
-                if action == None:#almost all items have no return
+                    action = hero.pockets[choice - hero.max_inventory].use_item(
+                                                        hero, enemy, combat_log)
+                if action == None:#almost all items have no return-value
                     action = "3"
 
         case "4":
@@ -297,12 +302,4 @@ def after_combat(hero, enemy, combat_log):
             item.after_combat(hero)
 
     return True
-
-#NOT USED IN COMBAT.PY
-def train_hero(hero):#only called during the beginning
-    hero.abilities.append(Ability4())
-    hero.abilities.append(Ability3())
-    #hero.abilities.append(Ability0())
-    #hero.abilities.append(Ability15())
-    #hero.abilities.append(Ability8())
 
