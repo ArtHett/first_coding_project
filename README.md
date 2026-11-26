@@ -8,7 +8,7 @@ Already containing:
 -minimum content for act1 and act2, 
 -over 20 different enemies 
 -over 40 items and consumables
--about 20 different abilities the can learn
+-about 20 different abilities hero the can learn
 
 enemy_sprites are made with chatGPT and Claude Opus 5.5, all icons in game are from the game classic 'WarCraft3'
 
