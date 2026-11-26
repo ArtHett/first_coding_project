@@ -12,6 +12,6 @@ Already containing:
 
 enemy_sprites are made with chatGPT and Claude Opus 5.5, all icons in game are from the game classic 'WarCraft3'
 
-[Kampfsystem](images/example_battle)
-[Event](images/example_event)
-[Dungeon](images/act2_start)
+[Kampfsystem](images/example_battle.png)
+[Event](images/example_event.png)
+[Dungeon](images/act2_start.png)
