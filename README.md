@@ -15,3 +15,9 @@ enemy_sprites are made with chatGPT and Claude Opus 5.5, all icons in game are f
 [Kampfsystem](images/example_battle.png)
 [Event](images/example_event.png)
 [Dungeon](images/act2_start.png)
+
+recommended is installing either Python3.12 or using venv to launch this script with 3.12
+with terminal you have to move to the right directory and 'pip install pygame'
+When i switched my game from console/text based to pygame, only Python 3.12 was feature complete
+with pygame. With newer versions of python, pygame might not be supported
+
