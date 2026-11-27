@@ -111,6 +111,7 @@ class Enemy:
         self.magic_power = magic_power
         self.critical = critical
         self.accuracy = accuracy
+        self.boss = False #needed for smoke bomb check
         self.over_hp = 0
         self.buffs = []
 
@@ -383,7 +384,8 @@ class EasyPool1(Enemy):
     def enemy_ai(self, hero, key, combat_log):
         match key:
             case 1:
-                self._random(hero, combat_log)
+                escape = self._random(hero, combat_log)
+                return escape
             case 2:
                 self._frenzy(combat_log)
             case 3:
@@ -887,6 +889,7 @@ class Boss1(Enemy):
                         boss_1,
                         reduction=10, dodge=10, mental_reduction=10,
                         magic_power=6)
+        self.boss = True#needed for smoke bomb check
         
     def enemy_ai(self, hero, key, combat_log):
         match key:
@@ -1578,7 +1581,7 @@ class Boss1Act2(Enemy):
                         act2_boss_1,
                         reduction=20, dodge=12, mental_reduction=15,
                         critical=10, magic_power=20)
-        self.boss = True
+        self.boss = True #needed for smoke bomb check
         self.life_last_turn = self.life
 
     def enemy_ai(self, hero, key, combat_log):

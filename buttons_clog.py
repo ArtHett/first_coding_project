@@ -474,7 +474,7 @@ def cursor(choice, button, buttons, event):
             elif button.key in string_keys[2:]:
                 i = string_keys.index(button.key)
                 buttons[i - 2].cursor = True
-            elif button.key in range(2, 4):
+            elif button.key in range(2, 5):
                 buttons[button.key - 2].cursor = True
             else:
                 button.cursor = True
